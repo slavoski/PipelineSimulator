@@ -168,6 +168,8 @@ namespace PipelineSimulator.VM
 			{
 				ParseCommandLine(line);
 			}
+
+			AllPipelines.AddColors();
 		}
 
 		private void ParseCommandLine(string line)

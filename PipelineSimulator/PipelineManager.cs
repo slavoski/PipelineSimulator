@@ -54,6 +54,30 @@ namespace PipelineSimulator
 
 		#region methods
 
+		internal void AddColors()
+		{
+			for (int i = 0; i < ForwardingPipeline.PipelineInstructions.Count; ++i)
+			{
+				var currentPipeline = ForwardingPipeline.PipelineInstructions[i];
+				var color = ColorManager.GetColor();
+
+				for (int j = 1; j < 4; j++)
+				{
+					var index = i + j;
+					if (index >= ForwardingPipeline.PipelineInstructions.Count)
+						break;
+
+					var descendant = ForwardingPipeline.PipelineInstructions[index];
+
+					if (CheckForSameRegister(currentPipeline, descendant))
+					{
+						descendant.SetHazard("", descendant.ForwardingValueNeeded, color);
+						currentPipeline.SetHazard("", currentPipeline.ForwardingValueAvailable, color);
+					}
+				}
+			}
+		}
+
 		internal void AddNewInstruction(IPipelineInstruction newInstruction)
 		{
 			newInstruction.Initialize(HazardPipeline.PipelineInstructions.Count);
@@ -114,8 +138,8 @@ namespace PipelineSimulator
 				{
 					if (CheckForSameRegister(instruction, newInstruction))
 					{
-						instruction.SetHazard("Data", PipelineStages.WB.ToString(), color);
-						newInstruction.SetHazard("Data", PipelineStages.ID.ToString(), color);
+						instruction.SetHazard("Data", PipelineStages.WB, color);
+						newInstruction.SetHazard("Data", PipelineStages.ID, color);
 					}
 				}
 				else
@@ -140,8 +164,8 @@ namespace PipelineSimulator
 					if (isHazard)
 					{
 						var color = ColorManager.GetColor();
-						newInstruction.SetHazard("Structural", PipelineStages.IF.ToString(), color);
-						instruction.SetHazard("Structural", PipelineStages.DMEM.ToString(), color);
+						newInstruction.SetHazard("Structural", PipelineStages.IF, color);
+						instruction.SetHazard("Structural", PipelineStages.DMEM, color);
 					}
 					else
 					{

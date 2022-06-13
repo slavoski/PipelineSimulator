@@ -96,9 +96,9 @@ namespace PipelineSimulator
 			SetupDefaultBackground(InstructionBlocks);
 		}
 
-		public override void SetHazard(string hazard, string block, SolidColorBrush colorBrush)
+		public override void SetHazard(string hazard, PipelineStages block, SolidColorBrush colorBrush)
 		{
-			var selectedBlock = InstructionBlocks.FirstOrDefault(p => string.Equals(p.Name, block));
+			var selectedBlock = InstructionBlocks.FirstOrDefault(p => string.Equals(p.Stage, block));
 
 			if (selectedBlock != null)
 			{

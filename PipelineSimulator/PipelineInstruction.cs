@@ -148,7 +148,7 @@ namespace PipelineSimulator
 		{
 		}
 
-		public virtual void SetHazard(string hazard, string block, SolidColorBrush colorBrush)
+		public virtual void SetHazard(string hazard, PipelineStages block, SolidColorBrush colorBrush)
 		{
 		}
 

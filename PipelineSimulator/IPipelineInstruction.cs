@@ -104,7 +104,7 @@ namespace PipelineSimulator
 
 		public void Initialize(int row);
 
-		public void SetHazard(string hazard, string block, SolidColorBrush colorBrush);
+		public void SetHazard(string hazard, PipelineStages block, SolidColorBrush colorBrush);
 
 		public void SetupSolutions();
 

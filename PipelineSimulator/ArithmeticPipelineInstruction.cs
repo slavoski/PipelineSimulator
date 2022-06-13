@@ -1,152 +1,102 @@
 ﻿using MvvmHelpers;
+using System.Linq;
+using System.Windows;
+using System.Windows.Media;
 using static PipelineSimulator.Constants;
 
 namespace PipelineSimulator
 {
-	public class ArithmeticPipelineInstruction : BaseViewModel, IPipelineInstruction
+	public class ArithmeticPipelineInstruction : PipelineInstruction
 	{
-		public string Destination
-		{
-			get;
-			set;
-		} = string.Empty;
+		#region constructor / destructor
 
-		public ObservableRangeCollection<Block> ForwardingInstructionSet
+		public ArithmeticPipelineInstruction()
 		{
-			get;
-			set;
-		} = new ObservableRangeCollection<Block>();
-
-		public int ForwardingValueAvailable
-		{
-			get;
-			set;
-		} = (int)PipelineStages.Memory;
-
-		public int ForwardingValueNeeded
-		{
-			get;
-			set;
-		} = (int)PipelineStages.ALU;
-
-		public ObservableRangeCollection<Block> HazardInstructionSet
-		{
-			get;
-			set;
-		} = new ObservableRangeCollection<Block>();
-
-		public string Instruction
-		{
-			get;
-			set;
-		} = string.Empty;
-
-		public ObservableRangeCollection<Block> ReorderedForwardingInstructionSet
-		{
-			get;
-			set;
-		} = new ObservableRangeCollection<Block>();
-
-		public int Row
-		{
-			get;
-			set;
+			ValueAvailable = (int)PipelineStages.Memory;
+			ValueNeeded = (int)PipelineStages.EX;
+			ForwardingValueAvailable = (int)PipelineStages.EX_Finished;
 		}
 
-		public string Source
-		{
-			get;
-			set;
-		} = string.Empty;
-
-		public string Source2
-		{
-			get;
-			set;
-		} = string.Empty;
-
-		public ObservableRangeCollection<Block> StallInstructionSet
-		{
-			get;
-			set;
-		} = new ObservableRangeCollection<Block>();
-
-		public int ValueAvailable
-		{
-			get;
-			set;
-		}
-
-		public int ValueNeeded
-		{
-			get;
-			set;
-		}
+		#endregion constructor / destructor
 
 		#region methods
 
-		public void Initialize()
+		public override IPipelineInstruction Copy()
+		{
+			return new ArithmeticPipelineInstruction()
+			{
+				Command = this.Command,
+				Destination = this.Destination,
+				ForwardingValueAvailable = this.ForwardingValueAvailable,
+				Hazard = this.Hazard,
+				Instruction = this.Instruction,
+				Source = this.Source,
+				Source2 = this.Source2,
+				ValueAvailable = this.ValueAvailable,
+				ValueNeeded = this.ValueNeeded,
+			};
+		}
+
+		public override void Initialize(int row)
+		{
+			Row = row;
+
+			row++;
+
+			AddBlankLines();
+
+			InstructionBlocks.Add(new Block("IF", row++) { IsHalfBackground = false, Stage = PipelineStages.InstructionFetch });
+
+			AddStalls();
+
+			InstructionBlocks.Add(new Block("", -1) { Stage = PipelineStages.IF_Finished });
+			InstructionBlocks.Add(new Block("ID", row++) { IsHalfBackground = true, IsHalfBlock = Visibility.Visible, Stage = PipelineStages.InstructionDecode });
+			InstructionBlocks.Add(new Block("", -1) { Stage = PipelineStages.ID_Finished });
+			InstructionBlocks.Add(new Block("ALU", row++) { IsHalfBackground = false, Stage = PipelineStages.EX });
+			InstructionBlocks.Add(new Block("", -1) { Stage = PipelineStages.EX_Finished });
+			InstructionBlocks.Add(new Block("DMEM", row++) { IsHalfBackground = false, Stage = PipelineStages.Memory });
+			InstructionBlocks.Add(new Block("", -1) { Stage = PipelineStages.Memory_Finished });
+			InstructionBlocks.Add(new Block("WB", row++) { IsHalfBackground = true, IsHalfBlock = Visibility.Visible, Stage = PipelineStages.WriteBack });
+
+			SetupDefaultBackground(InstructionBlocks);
+		}
+
+		public override void SetHazard(string hazard, string block, SolidColorBrush colorBrush)
+		{
+			var selectedBlock = InstructionBlocks.FirstOrDefault(p => string.Equals(p.Name, block));
+
+			if (selectedBlock != null)
+			{
+				Hazard += hazard;
+				selectedBlock.SetBackground(colorBrush);
+				selectedBlock.SetForegroundBlack();
+			}
+		}
+
+		public void SetupDefaultBackground(ObservableRangeCollection<Block> _collection)
+		{
+			foreach (var instruction in _collection)
+			{
+				instruction.SetDefaultBackground();
+			}
+		}
+
+		private void AddBlankLines()
 		{
 			for (int i = 0; i < Row; i++)
 			{
-				HazardInstructionSet.Add(new Block("", true));
-				HazardInstructionSet.Add(new Block(""));
-				ReorderedForwardingInstructionSet.Add(new Block("", true));
-				ReorderedForwardingInstructionSet.Add(new Block(""));
-				StallInstructionSet.Add(new Block("", true));
-				StallInstructionSet.Add(new Block(""));
-				ForwardingInstructionSet.Add(new Block("", true));
-				ForwardingInstructionSet.Add(new Block(""));
+				InstructionBlocks.Add(new Block("", -1, true));
+				InstructionBlocks.Add(new Block("", -1));
 			}
-			SetupForwarding();
-			SetupHazard();
-			SetupReorderedForwarding();
-			SetupStall();
 		}
 
-		private void SetupForwarding()
+		private void AddStalls()
 		{
-		}
-
-		private void SetupHazard()
-		{
-			HazardInstructionSet.Add(new Block("IF") { IsHalfBackground = false });
-			HazardInstructionSet.Add(new Block(""));
-			HazardInstructionSet.Add(new Block("ID") { IsHalfBackground = true });
-			HazardInstructionSet.Add(new Block(""));
-
-			Block block;
-			if (Row == 0)
+			for (int i = 0; i < Stalls; i++)
 			{
-				block = new Block("ALU") { IsHalfBackground = false, IsStart = true };
+				InstructionBlocks.Add(new Block("", -1) { Stage = PipelineStages.Stall });
+				InstructionBlocks.Add(new Block("Stall", -1) { IsHalfBackground = false, Stage = PipelineStages.Stall });
 			}
-			else
-			{
-				block = new Block("ALU") { IsHalfBackground = false };
-			}
-			HazardInstructionSet.Add(block);
-			HazardInstructionSet.Add(new Block(""));
-
-			if (Row == 1)
-			{
-				block = new Block("DMEM") { IsHalfBackground = false, IsEnd = true };
-			}
-			else
-			{
-				block = new Block("DMEM") { IsHalfBackground = false };
-			}
-
-			HazardInstructionSet.Add(block);
-			HazardInstructionSet.Add(new Block(""));
-			HazardInstructionSet.Add(new Block("WB") { IsHalfBackground = true });
-		}
-
-		private void SetupReorderedForwarding()
-		{
-		}
-
-		private void SetupStall()
-		{
 		}
 
 		#endregion methods

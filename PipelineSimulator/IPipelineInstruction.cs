@@ -1,16 +1,17 @@
 ﻿using MvvmHelpers;
+using System.Windows.Media;
 
 namespace PipelineSimulator
 {
 	public interface IPipelineInstruction
 	{
-		public string Destination
+		public string Command
 		{
 			get;
 			set;
 		}
 
-		public ObservableRangeCollection<Block> ForwardingInstructionSet
+		public string Destination
 		{
 			get;
 			set;
@@ -22,13 +23,7 @@ namespace PipelineSimulator
 			set;
 		}
 
-		public int ForwardingValueNeeded
-		{
-			get;
-			set;
-		}
-
-		public ObservableRangeCollection<Block> HazardInstructionSet
+		public string Hazard
 		{
 			get;
 			set;
@@ -40,7 +35,13 @@ namespace PipelineSimulator
 			set;
 		}
 
-		public ObservableRangeCollection<Block> ReorderedForwardingInstructionSet
+		public ObservableRangeCollection<Block> InstructionBlocks
+		{
+			get;
+			set;
+		}
+
+		public ObservableRangeCollection<string> Instructions
 		{
 			get;
 			set;
@@ -64,12 +65,6 @@ namespace PipelineSimulator
 			set;
 		}
 
-		public ObservableRangeCollection<Block> StallInstructionSet
-		{
-			get;
-			set;
-		}
-
 		public int ValueAvailable
 		{
 			get;
@@ -82,8 +77,20 @@ namespace PipelineSimulator
 			set;
 		}
 
-		public void Initialize()
-		{
-		}
+		#region methods
+
+		public void ClearAll();
+
+		public IPipelineInstruction Copy();
+
+		public void Initialize(int row);
+
+		public void InsertStall();
+
+		public void SetHazard(string hazard, string block, SolidColorBrush colorBrush);
+
+		public void SetupSolutions();
+
+		#endregion methods
 	}
 }

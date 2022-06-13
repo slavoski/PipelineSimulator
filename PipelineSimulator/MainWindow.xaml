@@ -29,6 +29,8 @@
 		<ToolBar Grid.Row="0" Grid.ColumnSpan="2">
 			<Button ToolTip="Parse" Content="{materialDesign:PackIcon Kind=Gear}" Command="{Binding ParseCommands}" />
 			<Separator />
+			<TextBlock Text="One Memory Port" VerticalAlignment="Center" />
+			<ToggleButton IsChecked="{Binding AllPipelines.IsUnifiedMemory}" />
 		</ToolBar>
 
 		<TabControl Grid.Row="1" Style="{StaticResource MaterialDesignFilledTabControl}">
@@ -65,78 +67,174 @@
 		<TabControl Grid.Column="1" Grid.Row="1" TabStripPlacement="Right">
 			<TabItem Header="Hazards">
 				<GroupBox  Header="Hazard Pipeline" materialDesign:ColorZoneAssist.Mode="SecondaryMid">
-					<Grid>
-						<Grid.ColumnDefinitions>
-							<ColumnDefinition Width="125" />
-							<ColumnDefinition Width="2" />
-							<ColumnDefinition Width="*" />
-						</Grid.ColumnDefinitions>
-						<Grid.RowDefinitions>
-							<RowDefinition Height="Auto" />
-							<RowDefinition Height="Auto" />
-							<RowDefinition Height="*" />
-						</Grid.RowDefinitions>
+					<pipelinesimulator:MyScrollViewer Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="3"  HorizontalScrollBarVisibility="Auto">
+						<Grid>
+							<Grid.ColumnDefinitions>
+								<ColumnDefinition Width="125" />
+								<ColumnDefinition Width="2" />
+								<ColumnDefinition Width="125" />
+								<ColumnDefinition Width="2" />
+								<ColumnDefinition Width="*" />
+							</Grid.ColumnDefinitions>
+							<Grid.RowDefinitions>
+								<RowDefinition Height="Auto" />
+								<RowDefinition Height="Auto" />
+								<RowDefinition Height="*" />
+							</Grid.RowDefinitions>
+							<TextBlock Text="Instruction" HorizontalAlignment="Center" />
+							<TextBlock Text="Hazard" Grid.Column="2" HorizontalAlignment="Center" />
+							<TextBlock Text="Pipeline" Grid.Column="4" HorizontalAlignment="Left" Margin="15,0,0,0" />
+							<Separator Grid.ColumnSpan="5" Grid.Row="1" />
 
-						<TextBlock Text="Instruction" HorizontalAlignment="Center" Width="100" />
-						<TextBlock Text="Pipeline" HorizontalAlignment="Center" Grid.Column="2" />
-						<Separator Grid.ColumnSpan="3" Grid.Row="1" />
+							<ListView Grid.Row="2" ItemsSource="{Binding AllPipelines.HazardPipeline.PipelineInstructions}">
+								<ListView.ItemTemplate>
+									<DataTemplate>
+										<Grid>
+											<Grid.ColumnDefinitions>
+												<ColumnDefinition Width="Auto" />
+												<ColumnDefinition Width="*" />
+											</Grid.ColumnDefinitions>
+											<Grid.RowDefinitions>
+												<RowDefinition Height="66" />
+											</Grid.RowDefinitions>
+											<TextBlock Text="{Binding Instruction}" VerticalAlignment="Center" />
+										</Grid>
+									</DataTemplate>
+								</ListView.ItemTemplate>
+							</ListView>
 
-						<pipelinesimulator:MyScrollViewer Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="3"  HorizontalScrollBarVisibility="Auto">
-							<Grid>
-								<Grid.ColumnDefinitions>
-									<ColumnDefinition Width="125" />
-									<ColumnDefinition Width="2" />
-									<ColumnDefinition Width="*" />
-								</Grid.ColumnDefinitions>
-								<ListView ItemsSource="{Binding Instructions}">
-									<ListView.ItemTemplate>
-										<DataTemplate>
-											<Grid Grid.IsSharedSizeScope="True">
-												<Grid.ColumnDefinitions>
-													<ColumnDefinition Width="Auto" />
-													<ColumnDefinition Width="*" />
-												</Grid.ColumnDefinitions>
-												<Grid.RowDefinitions>
-													<RowDefinition Height="66" />
-												</Grid.RowDefinitions>
-												<TextBlock Text="{Binding Instruction}" VerticalAlignment="Center" />
-											</Grid>
-										</DataTemplate>
-									</ListView.ItemTemplate>
-								</ListView>
+							<Border Grid.Column="1" Background="{DynamicResource MaterialDesignLightSeparatorBackground}" Grid.RowSpan="3" />
 
-								<Border Grid.Column="1" Background="{DynamicResource MaterialDesignLightSeparatorBackground}" Grid.RowSpan="3" />
+							<ListView Grid.Row="2" Grid.Column="2" ItemsSource="{Binding AllPipelines.HazardPipeline.PipelineInstructions}">
+								<ListView.ItemTemplate>
+									<DataTemplate>
+										<Grid>
+											<Grid.ColumnDefinitions>
+												<ColumnDefinition Width="Auto" />
+												<ColumnDefinition Width="*" />
+											</Grid.ColumnDefinitions>
+											<Grid.RowDefinitions>
+												<RowDefinition Height="66" />
+											</Grid.RowDefinitions>
+											<TextBlock Text="{Binding Hazard}" VerticalAlignment="Center" HorizontalAlignment="Center" TextWrapping="Wrap" />
+										</Grid>
+									</DataTemplate>
+								</ListView.ItemTemplate>
+							</ListView>
 
-								<ListView Grid.Column="2" ItemsSource="{Binding Instructions}">
-									<ListView.ItemTemplate>
-										<DataTemplate>
-											<ListView ItemsSource="{Binding HazardInstructionSet}">
-												<ListView.ItemTemplate>
-													<DataTemplate>
-														<Grid Grid.IsSharedSizeScope="True">
-															<Grid.RowDefinitions>
-																<RowDefinition Height="Auto" SharedSizeGroup="Row1" />
-															</Grid.RowDefinitions>
-															<materialDesign:Card Width="{Binding Width}" Height="{Binding Height}" Background="{Binding Background}" />
-															<TextBlock Text="{Binding Name}" HorizontalAlignment="Center" VerticalAlignment="Center" />
-														</Grid>
-													</DataTemplate>
-												</ListView.ItemTemplate>
-												<ListView.ItemsPanel>
-													<ItemsPanelTemplate>
-														<StackPanel Orientation="Horizontal" />
-													</ItemsPanelTemplate>
-												</ListView.ItemsPanel>
-											</ListView>
-										</DataTemplate>
-									</ListView.ItemTemplate>
-								</ListView>
-							</Grid>
-						</pipelinesimulator:MyScrollViewer>
-					</Grid>
+							<Border Grid.Column="3" Background="{DynamicResource MaterialDesignLightSeparatorBackground}" Grid.RowSpan="3" />
+
+							<ListView Grid.Row="2" Grid.Column="4" ItemsSource="{Binding AllPipelines.HazardPipeline.PipelineInstructions}">
+								<ListView.ItemTemplate>
+									<DataTemplate>
+										<ListView ItemsSource="{Binding InstructionBlocks}">
+											<ListView.ItemTemplate>
+												<DataTemplate>
+													<Grid>
+														<Grid.RowDefinitions>
+															<RowDefinition Height="Auto" SharedSizeGroup="Row1" />
+														</Grid.RowDefinitions>
+														<materialDesign:Card Width="{Binding Width}" Height="{Binding Height}" Background="{Binding Background}" Foreground="{Binding Foreground}">
+															<Grid>
+																<Grid.ColumnDefinitions>
+																	<ColumnDefinition Width="*" />
+																	<ColumnDefinition Width="*" />
+																</Grid.ColumnDefinitions>
+																<Grid Grid.Column="0" Width="50" Height="50" Background="{Binding LeftHalfBackground}" Visibility="{Binding IsHalfBlock}" />
+																<Grid Grid.Column="1" Background="{Binding HalfBackground}" Visibility="{Binding IsHalfBlock}" />
+																<TextBlock Grid.ColumnSpan="2" Text="{Binding Name}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+															</Grid>
+														</materialDesign:Card>
+													</Grid>
+												</DataTemplate>
+											</ListView.ItemTemplate>
+											<ListView.ItemsPanel>
+												<ItemsPanelTemplate>
+													<StackPanel Orientation="Horizontal" />
+												</ItemsPanelTemplate>
+											</ListView.ItemsPanel>
+										</ListView>
+									</DataTemplate>
+								</ListView.ItemTemplate>
+							</ListView>
+						</Grid>
+					</pipelinesimulator:MyScrollViewer>
 				</GroupBox>
 			</TabItem>
-			<TabItem Header="Stall" />
+			<TabItem Header="Stall">
+				<GroupBox Header="Stall Pipeline" materialDesign:ColorZoneAssist.Mode="SecondaryMid">
+					<pipelinesimulator:MyScrollViewer Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="3"  HorizontalScrollBarVisibility="Auto">
+						<Grid>
+							<Grid.ColumnDefinitions>
+								<ColumnDefinition Width="125" />
+								<ColumnDefinition Width="2" />
+								<ColumnDefinition Width="*" />
+							</Grid.ColumnDefinitions>
+							<Grid.RowDefinitions>
+								<RowDefinition Height="Auto" />
+								<RowDefinition Height="Auto" />
+								<RowDefinition Height="*" />
+							</Grid.RowDefinitions>
+							<TextBlock Text="Instruction" HorizontalAlignment="Center" />
+							<TextBlock Text="Pipeline" Grid.Column="4" HorizontalAlignment="Left" Margin="15,0,0,0" />
+							<Separator Grid.ColumnSpan="3" Grid.Row="1" />
+
+							<ListView Grid.Row="2" ItemsSource="{Binding AllPipelines.StallPipeline.PipelineInstructions}">
+								<ListView.ItemTemplate>
+									<DataTemplate>
+										<Grid>
+											<Grid.ColumnDefinitions>
+												<ColumnDefinition Width="Auto" />
+												<ColumnDefinition Width="*" />
+											</Grid.ColumnDefinitions>
+											<Grid.RowDefinitions>
+												<RowDefinition Height="66" />
+											</Grid.RowDefinitions>
+											<TextBlock Text="{Binding Instruction}" VerticalAlignment="Center" />
+										</Grid>
+									</DataTemplate>
+								</ListView.ItemTemplate>
+							</ListView>
+
+							<Border Grid.Column="1" Background="{DynamicResource MaterialDesignLightSeparatorBackground}" Grid.RowSpan="3" />
+
+							<ListView Grid.Row="2" Grid.Column="2" ItemsSource="{Binding AllPipelines.StallPipeline.PipelineInstructions}">
+								<ListView.ItemTemplate>
+									<DataTemplate>
+										<ListView ItemsSource="{Binding InstructionBlocks}">
+											<ListView.ItemTemplate>
+												<DataTemplate>
+													<Grid>
+														<Grid.RowDefinitions>
+															<RowDefinition Height="Auto" SharedSizeGroup="Row1" />
+														</Grid.RowDefinitions>
+														<materialDesign:Card Width="{Binding Width}" Height="{Binding Height}" Background="{Binding Background}" Foreground="{Binding Foreground}">
+															<Grid>
+																<Grid.ColumnDefinitions>
+																	<ColumnDefinition Width="*" />
+																	<ColumnDefinition Width="*" />
+																</Grid.ColumnDefinitions>
+																<Grid Grid.Column="0" Width="50" Height="50" Background="{Binding LeftHalfBackground}" Visibility="{Binding IsHalfBlock}" />
+																<Grid Grid.Column="1" Background="{Binding HalfBackground}" Visibility="{Binding IsHalfBlock}" />
+																<TextBlock Grid.ColumnSpan="2" Text="{Binding Name}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+															</Grid>
+														</materialDesign:Card>
+													</Grid>
+												</DataTemplate>
+											</ListView.ItemTemplate>
+											<ListView.ItemsPanel>
+												<ItemsPanelTemplate>
+													<StackPanel Orientation="Horizontal" />
+												</ItemsPanelTemplate>
+											</ListView.ItemsPanel>
+										</ListView>
+									</DataTemplate>
+								</ListView.ItemTemplate>
+							</ListView>
+						</Grid>
+					</pipelinesimulator:MyScrollViewer>
+				</GroupBox>
+			</TabItem>
 			<TabItem Header="Forwarding and Stall" />
 			<TabItem Header="Reordering with Forwarding and Stall" />
 		</TabControl>

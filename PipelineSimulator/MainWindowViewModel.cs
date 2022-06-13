@@ -3,7 +3,6 @@ using MvvmHelpers;
 using MvvmHelpers.Commands;
 using ProcessorSimulator;
 using System;
-using System.Linq;
 
 namespace PipelineSimulator.VM
 {
@@ -17,17 +16,17 @@ namespace PipelineSimulator.VM
 
 		#region properties
 
+		public PipelineManager AllPipelines
+		{
+			get;
+			set;
+		} = new PipelineManager();
+
 		public ObservableRangeCollection<CommandDescription> CommandDescriptions
 		{
 			get;
 			set;
 		} = new ObservableRangeCollection<CommandDescription>();
-
-		public ObservableRangeCollection<IPipelineInstruction> Instructions
-		{
-			get;
-			set;
-		} = new ObservableRangeCollection<IPipelineInstruction>();
 
 		public string MainFile
 		{
@@ -80,49 +79,45 @@ namespace PipelineSimulator.VM
 			};
 		}
 
-		private void BuildCommand(string command, string[] parameters, string instruction, int row)
+		private void BuildCommand(string command, string[] parameters, string instruction)
 		{
-			var isNewCommand = false;
+			IPipelineInstruction newInstruction = null;
 
 			switch (command)
 			{
 				case "add":
 					{
-						isNewCommand = true;
-						Instructions.Add(new ArithmeticPipelineInstruction()
+						newInstruction = new ArithmeticPipelineInstruction()
 						{
-							Destination = GetValidRegister(parameters[0], row),
-							Source = GetValidRegister(parameters[1], row),
-							Source2 = GetValidRegister(parameters[2], row),
+							Command = command,
+							Destination = GetValidRegister(parameters[0]),
+							Source = GetValidRegister(parameters[1]),
+							Source2 = GetValidRegister(parameters[2]),
 							Instruction = instruction,
-							Row = row,
-						});
+						};
 					}
 					break;
 
 				case "sub":
 					{
-						isNewCommand = true;
-						Instructions.Add(new ArithmeticPipelineInstruction()
+						newInstruction = new ArithmeticPipelineInstruction()
 						{
-							Destination = GetValidRegister(parameters[0], row),
-							Source = GetValidRegister(parameters[1], row),
-							Source2 = GetValidRegister(parameters[2], row),
+							Command = command,
+							Destination = GetValidRegister(parameters[0]),
+							Source = GetValidRegister(parameters[1]),
+							Source2 = GetValidRegister(parameters[2]),
 							Instruction = instruction,
-							Row = row,
-						});
+						};
 					}
 					break;
 
 				case "lw":
 					{
-						isNewCommand = true;
 					}
 					break;
 
 				case "sw":
 					{
-						isNewCommand = true;
 					}
 					break;
 
@@ -133,10 +128,15 @@ namespace PipelineSimulator.VM
 					break;
 			}
 
-			if (isNewCommand)
+			if (newInstruction != null)
 			{
-				Instructions.Last().Initialize();
+				AllPipelines.AddNewInstruction(newInstruction);
 			}
+		}
+
+		private void ClearAll()
+		{
+			AllPipelines.ClearLists();
 		}
 
 		private string[] GetParameters(string line, int index)
@@ -144,16 +144,16 @@ namespace PipelineSimulator.VM
 			return line.Substring(index + 1, line.Length - index - 1).Split(new char[] { ' ', ',' });
 		}
 
-		private string GetValidRegister(string inputParameter, int row)
+		private string GetValidRegister(string inputParameter)
 		{
-			string result = "";
+			string result;
 			if (3 == inputParameter.Length && string.Equals(inputParameter[0], '$'))
 			{
 				result = inputParameter;
 			}
 			else
 			{
-				SnackBoxMessage.Enqueue($"Bad Register: Line: {row},  Register: {inputParameter} not recognized");
+				SnackBoxMessage.Enqueue($"Bad Register: {inputParameter} not recognized");
 				throw new ArgumentException();
 			}
 			return result;
@@ -161,23 +161,16 @@ namespace PipelineSimulator.VM
 
 		private void ParseAllCommands()
 		{
-			Instructions.Clear();
-			int row = 0;
+			ClearAll();
 
-			try
+			var instructions = MainFile.Split(new string[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
+			foreach (var line in instructions)
 			{
-				foreach (var line in MainFile.Split(new string[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries))
-				{
-					ParseCommandLine(line, row);
-					row++;
-				}
-			}
-			catch
-			{
+				ParseCommandLine(line);
 			}
 		}
 
-		private void ParseCommandLine(string line, int row)
+		private void ParseCommandLine(string line)
 		{
 			line = line.Trim();
 			var indexOfFirstSpace = line.IndexOf(' ');
@@ -187,7 +180,7 @@ namespace PipelineSimulator.VM
 				var command = line.Substring(0, indexOfFirstSpace);
 				var parameters = GetParameters(line, indexOfFirstSpace);
 
-				BuildCommand(command, parameters, line, row);
+				BuildCommand(command, parameters, line);
 			}
 		}
 

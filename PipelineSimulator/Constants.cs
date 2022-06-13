@@ -4,11 +4,19 @@
 	{
 		public enum PipelineStages
 		{
+			Blank,
 			InstructionFetch,
-			DecodeInstruction,
-			ALU,
+			IF_Finished,
+			InstructionDecode,
+			ID_Finished,
+			EX,
+			EX_Finished,
 			Memory,
-			WriteBack
+			Memory_Finished,
+			WriteBack,
+			WriteBack_Finished,
+			Bubble,
+			Stall,
 		}
 	}
 }

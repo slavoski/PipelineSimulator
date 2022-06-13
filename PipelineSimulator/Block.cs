@@ -148,7 +148,7 @@ namespace PipelineSimulator
 		{
 			if (IsHalfBackground)
 			{
-				if (string.Equals(Name, "ID"))
+				if (string.Equals(Name, "WB"))
 				{
 					LeftHalfBackground = _background;
 				}

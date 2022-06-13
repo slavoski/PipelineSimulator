@@ -5,16 +5,16 @@
 		public enum PipelineStages
 		{
 			Blank,
-			InstructionFetch,
+			IF,
 			IF_Finished,
-			InstructionDecode,
+			ID,
 			ID_Finished,
 			EX,
 			EX_Finished,
-			Memory,
-			Memory_Finished,
-			WriteBack,
-			WriteBack_Finished,
+			DMEM,
+			DMEM_Finished,
+			WB,
+			WB_Finished,
 			Bubble,
 			Stall,
 		}

@@ -33,7 +33,7 @@ namespace PipelineSimulator
 		internal void ClearLists()
 		{
 			_row = 0;
-			foreach(var pipelineInstruction in PipelineInstructions)
+			foreach (var pipelineInstruction in PipelineInstructions)
 			{
 				pipelineInstruction.ClearAll();
 			}

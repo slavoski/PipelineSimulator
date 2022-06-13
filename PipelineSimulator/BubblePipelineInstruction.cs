@@ -10,8 +10,8 @@ namespace PipelineSimulator
 
 		public BubblePipelineInstruction()
 		{
-			ValueNeeded = (int)PipelineStages.Bubble;
-			ForwardingValueAvailable = (int)PipelineStages.Bubble;
+			ValueNeeded = PipelineStages.Bubble;
+			ForwardingValueAvailable = PipelineStages.Bubble;
 		}
 
 		#endregion constructor / destructor
@@ -35,12 +35,12 @@ namespace PipelineSimulator
 
 		private List<Block> BubbleRows()
 		{
-			List<Block> blockList = new List<Block>() { new Block("Bubble", -1) { IsHalfBackground = false } };
+			List<Block> blockList = new List<Block>() { new Block(PipelineStages.Bubble.ToString(), -1) { IsHalfBackground = false } };
 
 			for (int i = 0; i < 4; ++i)
 			{
 				blockList.Add(new Block("", -1) { Stage = PipelineStages.Bubble });
-				blockList.Add(new Block("Bubble", -1) { IsHalfBackground = false, Stage = PipelineStages.Bubble });
+				blockList.Add(new Block(PipelineStages.Bubble.ToString(), -1) { IsHalfBackground = false, Stage = PipelineStages.Bubble });
 			}
 			return blockList;
 		}

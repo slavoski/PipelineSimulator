@@ -1,5 +1,6 @@
 ﻿using MvvmHelpers;
 using System.Windows.Media;
+using static PipelineSimulator.Constants;
 
 namespace PipelineSimulator
 {
@@ -25,7 +26,13 @@ namespace PipelineSimulator
 			set;
 		} = string.Empty;
 
-		public int ForwardingValueAvailable
+		public PipelineStages ForwardingValueAvailable
+		{
+			get;
+			set;
+		}
+
+		public PipelineStages ForwardingValueNeeded
 		{
 			get;
 			set;
@@ -83,13 +90,13 @@ namespace PipelineSimulator
 			set;
 		}
 
-		public int ValueAvailable
+		public PipelineStages ValueAvailable
 		{
 			get;
 			set;
 		}
 
-		public int ValueNeeded
+		public PipelineStages ValueNeeded
 		{
 			get;
 			set;
@@ -99,8 +106,14 @@ namespace PipelineSimulator
 
 		#region methods
 
+		public virtual bool CheckForDataHazard(IPipelineInstruction pipelineInstruction, bool isForwarding, ref int rowIndex)
+		{
+			return false;
+		}
+
 		public virtual void ClearAll()
 		{
+			Stalls = 0;
 			InstructionBlocks.Clear();
 			Instructions.Clear();
 		}
@@ -121,11 +134,17 @@ namespace PipelineSimulator
 			};
 		}
 
-		public virtual void Initialize(int row)
+		public virtual Block GetValueAvailableBlock(bool isForwarding)
 		{
+			return null;
 		}
 
-		public virtual void InsertStall()
+		public virtual Block GetValueNeededBlock(bool isForwarding)
+		{
+			return null;
+		}
+
+		public virtual void Initialize(int row)
 		{
 		}
 

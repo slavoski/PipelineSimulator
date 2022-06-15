@@ -1,17 +1,11 @@
 ﻿using System.Linq;
+using System.Windows.Media;
 using static PipelineSimulator.Constants;
 
 namespace PipelineSimulator
 {
 	public class PipelineManager
 	{
-		#region member variables
-
-		private int _forwardPipelineIndex = 0;
-		private int _stallPipelineIndex = 0;
-
-		#endregion member variables
-
 		#region properties
 
 		public ColorManager ColorManager
@@ -44,15 +38,45 @@ namespace PipelineSimulator
 			set;
 		} = new PipelineSet();
 
-		private PipelineSet HazardWithChanges
-		{
-			get;
-			set;
-		} = new PipelineSet();
-
 		#endregion properties
 
 		#region methods
+
+		public void CheckForDataHazardOfHazardPipeline()
+		{
+			for (int i = 0; i < HazardPipeline.PipelineInstructions.Count; ++i)
+			{
+				var currentPipeline = HazardPipeline.PipelineInstructions[i];
+				var color = ColorManager.GetColor();
+
+				var descendant = GetDescendant(i + 1, HazardPipeline);
+				var descendant2 = GetDescendant(i + 2, HazardPipeline);
+				var descendant3 = GetDescendant(i + 3, HazardPipeline);
+
+				if (descendant != null && SetHazardColor(currentPipeline, descendant, color))
+				{
+					continue;
+				}
+				if (descendant2 != null && SetHazardColor(currentPipeline, descendant2, color))
+				{
+					continue;
+				}
+				if (descendant3 != null && SetHazardColor(currentPipeline, descendant3, color))
+				{
+					continue;
+				}
+			}
+
+			//int registers = CheckForDependency(instruction, newInstruction);
+
+			//if (registers != 0)
+			//{
+			//	instruction.SetHazard("Data", PipelineStages.WB, color, 3);
+			//	newInstruction.SetHazard("Data", PipelineStages.ID, color, registers);
+
+			//	break;
+			//}
+		}
 
 		internal void AddColors()
 		{
@@ -68,11 +92,16 @@ namespace PipelineSimulator
 						break;
 
 					var descendant = ForwardingPipeline.PipelineInstructions[index];
-
-					if (CheckForSameRegister(currentPipeline, descendant))
+					var registers = CheckForDependency(currentPipeline, descendant);
+					if (registers != 0)
 					{
-						descendant.SetHazard("", descendant.ForwardingValueNeeded, color);
+						descendant.SetHazard("", descendant.ForwardingValueNeeded, color, registers);
 						currentPipeline.SetHazard("", currentPipeline.ForwardingValueAvailable, color);
+					}
+
+					if (string.Equals(currentPipeline.Destination, descendant.Destination))
+					{
+						break;
 					}
 				}
 			}
@@ -80,31 +109,9 @@ namespace PipelineSimulator
 
 		internal void AddNewInstruction(IPipelineInstruction newInstruction)
 		{
-			newInstruction.Initialize(HazardPipeline.PipelineInstructions.Count);
-			if (IsUnifiedMemory)
-			{
-				CheckForStructuralHazard(newInstruction, true);
-			}
-			CheckForDataHazard(newInstruction, true);
-			HazardPipeline.AddNewPipelineInstruction(newInstruction);
-
-			var stallInstruction = newInstruction.Copy();
-			stallInstruction.Initialize(_stallPipelineIndex);
-			if (IsUnifiedMemory)
-			{
-				CheckForStructuralHazard(stallInstruction, false);
-			}
-			CheckForDataHazard(stallInstruction, false);
-			AddInstructionToStallPipeline(stallInstruction);
-
-			var forwardInstruction = newInstruction.Copy();
-			forwardInstruction.Initialize(_forwardPipelineIndex);
-			if (IsUnifiedMemory)
-			{
-				CheckForStructuralHazard(forwardInstruction, false);
-			}
-			CheckForDataHazard(forwardInstruction, false, true);
-			AddInstructionToForwardingPipeline(forwardInstruction);
+			AddInstructionToHazardPipeline(newInstruction);
+			AddInstructionToStallPipeline(newInstruction.Copy());
+			AddInstructionToForwardingPipeline(newInstruction.Copy());
 		}
 
 		internal void ClearLists()
@@ -112,54 +119,88 @@ namespace PipelineSimulator
 			HazardPipeline.ClearLists();
 			ForwardingPipeline.ClearLists();
 			StallPipeline.ClearLists();
-			_stallPipelineIndex = 0;
-			_forwardPipelineIndex = 0;
 		}
 
 		private void AddInstructionToForwardingPipeline(IPipelineInstruction forwardInstruction)
 		{
-			_forwardPipelineIndex++;
+			forwardInstruction.Initialize(ForwardingPipeline.Row);
+			if (IsUnifiedMemory)
+			{
+				CheckForStructuralHazard(forwardInstruction, false, true);
+			}
+			CheckForDataHazard(forwardInstruction, true);
 			ForwardingPipeline.AddNewPipelineInstruction(forwardInstruction);
+		}
+
+		private void AddInstructionToHazardPipeline(IPipelineInstruction hazardInstruction)
+		{
+			hazardInstruction.Initialize(HazardPipeline.PipelineInstructions.Count);
+			if (IsUnifiedMemory)
+			{
+				CheckForStructuralHazard(hazardInstruction, true);
+			}
+			HazardPipeline.AddNewPipelineInstruction(hazardInstruction);
 		}
 
 		private void AddInstructionToStallPipeline(IPipelineInstruction stallInstruction)
 		{
-			_stallPipelineIndex++;
+			stallInstruction.Initialize(StallPipeline.Row);
+			if (IsUnifiedMemory)
+			{
+				CheckForStructuralHazard(stallInstruction, false);
+			}
+			CheckForDataHazard(stallInstruction);
 			StallPipeline.AddNewPipelineInstruction(stallInstruction);
 		}
 
-		private void CheckForDataHazard(IPipelineInstruction newInstruction, bool isHazard, bool isForwarding = false)
+		private void CheckForDataHazard(IPipelineInstruction newInstruction, bool isForwarding = false)
 		{
-			var lastInstructions = (isHazard ? HazardPipeline : isForwarding ? ForwardingPipeline : StallPipeline).PipelineInstructions.Where(p => p.Instruction != "").TakeLast(3);
-			var color = ColorManager.GetColor();
+			var lastInstructions = (isForwarding ? ForwardingPipeline : StallPipeline).PipelineInstructions.Where(p => p.Instruction != "").TakeLast(3);
+
 			foreach (var instruction in lastInstructions.Reverse())
 			{
-				if (isHazard)
+				int row = isForwarding ? ForwardingPipeline.Row : StallPipeline.Row;
+				newInstruction.CheckForDataHazard(instruction, isForwarding, ref row);
+
+				if (isForwarding)
 				{
-					if (CheckForSameRegister(instruction, newInstruction))
-					{
-						instruction.SetHazard("Data", PipelineStages.WB, color);
-						newInstruction.SetHazard("Data", PipelineStages.ID, color);
-					}
+					ForwardingPipeline.Row = row;
 				}
 				else
 				{
-					newInstruction.CheckForDataHazard(instruction, isForwarding, ref isForwarding ? ref _forwardPipelineIndex : ref _stallPipelineIndex);
+					StallPipeline.Row = row;
 				}
 			}
+		}
+
+		private int CheckForDependency(IPipelineInstruction origPipeline, IPipelineInstruction newPipeline)
+		{
+			var reg = 0;
+
+			if (origPipeline.Destination == newPipeline.Source)
+			{
+				reg = 1;
+			}
+
+			if (origPipeline.Destination == newPipeline.Source2)
+			{
+				reg += 2;
+			}
+
+			return reg;
 		}
 
 		private bool CheckForSameRegister(IPipelineInstruction pipelineInstruction, IPipelineInstruction newInstruction) =>
 			string.Equals(pipelineInstruction.Destination, newInstruction.Source)
 			|| (string.Equals(pipelineInstruction.Destination, newInstruction.Source2));
 
-		private void CheckForStructuralHazard(IPipelineInstruction newInstruction, bool isHazard)
+		private void CheckForStructuralHazard(IPipelineInstruction newInstruction, bool isHazard, bool isForwarding = false)
 		{
-			var lastInstructions = (isHazard ? HazardPipeline : StallPipeline).PipelineInstructions.Where(p => p.Instruction != "").TakeLast(3);
+			var lastInstructions = (isHazard ? HazardPipeline : isForwarding ? ForwardingPipeline : StallPipeline).PipelineInstructions.Where(p => p.Instruction != "").TakeLast(3);
 			var instruction = lastInstructions.FirstOrDefault();
 			if (instruction != null)
 			{
-				if (CheckForStructuralHazards(instruction, newInstruction))
+				if (CheckStructuralRegisters(instruction, newInstruction))
 				{
 					if (isHazard)
 					{
@@ -169,31 +210,62 @@ namespace PipelineSimulator
 					}
 					else
 					{
-						var bubble = new BubblePipelineInstruction() { Instruction = "" };
-						bubble.Initialize(StallPipeline.PipelineInstructions.Count);
-						StallPipeline.AddNewPipelineInstruction(bubble);
-						newInstruction.ClearAll();
-						newInstruction.Initialize(StallPipeline.PipelineInstructions.Count);
+						if (isForwarding)
+						{
+							ForwardingPipeline.AddBubble(newInstruction);
+						}
+						else
+						{
+							StallPipeline.AddBubble(newInstruction);
+						}
 					}
 				}
 			}
 		}
 
-		private bool CheckForStructuralHazards(IPipelineInstruction originalInstructions, IPipelineInstruction newInstruction)
+		private bool CheckStructuralRegisters(IPipelineInstruction originalInstructions, IPipelineInstruction newInstruction)
 		{
 			var result = false;
 
 			var newIF = newInstruction.InstructionBlocks.First(p => p.Stage == PipelineStages.IF);
-
-			if (originalInstructions.InstructionBlocks.Count > newIF.Index)
+			var origDMEM = originalInstructions.InstructionBlocks.First(p => p.Stage == PipelineStages.DMEM);
+			if (origDMEM.Index == newIF.Index)
 			{
-				if (originalInstructions.InstructionBlocks.FirstOrDefault(p => p.Index == newIF.Index)?.Stage == Constants.PipelineStages.DMEM)
-				{
-					result = true;
-				}
+				result = true;
 			}
 
 			return result;
+		}
+
+		private IPipelineInstruction GetDescendant(int index, PipelineSet pipelineSet)
+		{
+			if (index < pipelineSet.PipelineInstructions.Count)
+			{
+				return pipelineSet.PipelineInstructions[index];
+			}
+			else
+			{
+				return null;
+			}
+		}
+
+		private bool SetHazardColor(IPipelineInstruction original, IPipelineInstruction descendant, SolidColorBrush color)
+		{
+			int registers = CheckForDependency(original, descendant);
+			bool isDestinationRegisterEqual = false;
+
+			if (registers != 0)
+			{
+				original.SetHazard("Data", PipelineStages.WB, color, 3);
+				descendant.SetHazard("Data", PipelineStages.ID, color, registers);
+			}
+
+			if (string.Equals(descendant.Destination, original.Destination))
+			{
+				isDestinationRegisterEqual = true;
+			}
+
+			return isDestinationRegisterEqual;
 		}
 
 		#endregion methods

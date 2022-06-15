@@ -18,9 +18,27 @@ namespace PipelineSimulator
 			set;
 		} = new ObservableRangeCollection<IPipelineInstruction>();
 
+		public int Row
+		{
+			get => _row;
+			set
+			{
+				_row = value;
+			}
+		}
+
 		#endregion properties
 
 		#region methods
+
+		internal void AddBubble(IPipelineInstruction pipelineInstruction)
+		{
+			var bubble = new BubblePipelineInstruction() { Instruction = "" };
+			bubble.Initialize(_row);
+			AddNewPipelineInstruction(bubble);
+			pipelineInstruction.ClearAll();
+			pipelineInstruction.Initialize(_row);
+		}
 
 		internal void AddNewPipelineInstruction(IPipelineInstruction pipelineInstruction)
 		{

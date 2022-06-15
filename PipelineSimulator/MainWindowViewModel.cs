@@ -170,6 +170,7 @@ namespace PipelineSimulator.VM
 			}
 
 			AllPipelines.AddColors();
+			AllPipelines.CheckForDataHazardOfHazardPipeline();
 		}
 
 		private void ParseCommandLine(string line)

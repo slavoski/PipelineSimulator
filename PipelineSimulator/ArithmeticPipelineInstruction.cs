@@ -78,32 +78,36 @@ namespace PipelineSimulator
 
 			AddBlankLines();
 
-			InstructionBlocks.Add(new Block(PipelineStages.IF.ToString(), row++) { IsHalfBackground = false, Stage = PipelineStages.IF });
+			InstructionBlocks.Add(new Block(PipelineStages.IF.ToString(), row++) { Stage = PipelineStages.IF });
 
 			AddStalls();
 
 			row += Stalls;
 
 			InstructionBlocks.Add(new Block("", row) { Stage = PipelineStages.IF_Finished });
-			InstructionBlocks.Add(new Block(PipelineStages.ID.ToString(), row++) { IsHalfBackground = true, IsHalfBlock = Visibility.Visible, Stage = PipelineStages.ID });
+			InstructionBlocks.Add(new Block(PipelineStages.ID.ToString(), row++) { IsHalfBlock = Visibility.Visible, Stage = PipelineStages.ID });
 			InstructionBlocks.Add(new Block("", row) { Stage = PipelineStages.ID_Finished });
-			InstructionBlocks.Add(new Block(PipelineStages.EX.ToString(), row++) { IsHalfBackground = false, Stage = PipelineStages.EX });
+			InstructionBlocks.Add(new Block(PipelineStages.EX.ToString(), row++) { Stage = PipelineStages.EX });
 			InstructionBlocks.Add(new Block("", row) { Stage = PipelineStages.EX_Finished });
-			InstructionBlocks.Add(new Block(PipelineStages.DMEM.ToString(), row++) { IsHalfBackground = false, Stage = PipelineStages.DMEM });
+			InstructionBlocks.Add(new Block(PipelineStages.DMEM.ToString(), row++) { Stage = PipelineStages.DMEM });
 			InstructionBlocks.Add(new Block("", row) { Stage = PipelineStages.WB_Finished });
-			InstructionBlocks.Add(new Block(PipelineStages.WB.ToString(), row++) { IsHalfBackground = true, IsHalfBlock = Visibility.Visible, Stage = PipelineStages.WB });
+			InstructionBlocks.Add(new Block(PipelineStages.WB.ToString(), row++) { IsHalfBlock = Visibility.Visible, Stage = PipelineStages.WB });
 
 			SetupDefaultBackground(InstructionBlocks);
 		}
 
-		public override void SetHazard(string hazard, PipelineStages block, SolidColorBrush colorBrush)
+		public override void SetHazard(string hazard, PipelineStages block, SolidColorBrush colorBrush, int registers)
 		{
 			var selectedBlock = InstructionBlocks.FirstOrDefault(p => string.Equals(p.Stage, block));
 
 			if (selectedBlock != null)
 			{
-				Hazard += hazard;
-				selectedBlock.SetBackground(colorBrush);
+				if (!Hazard.Contains(hazard))
+				{
+					Hazard += hazard + "\n";
+				}
+
+				selectedBlock.SetBackground(colorBrush, registers);
 				selectedBlock.SetForegroundBlack();
 			}
 		}
@@ -130,7 +134,7 @@ namespace PipelineSimulator
 			for (int i = 0; i < Stalls; i++)
 			{
 				InstructionBlocks.Add(new Block("", -1) { Stage = PipelineStages.Stall });
-				InstructionBlocks.Add(new Block(PipelineStages.Stall.ToString(), -1) { IsHalfBackground = false, Stage = PipelineStages.Stall });
+				InstructionBlocks.Add(new Block(PipelineStages.Stall.ToString(), -1) { Stage = PipelineStages.Stall });
 			}
 		}
 

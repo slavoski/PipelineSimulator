@@ -72,12 +72,6 @@ namespace PipelineSimulator
 			set;
 		}
 
-		public bool IsHalfBackground
-		{
-			get;
-			set;
-		}
-
 		public Visibility IsHalfBlock
 		{
 			get => _isHalfBlock;
@@ -144,17 +138,36 @@ namespace PipelineSimulator
 
 		#region methods
 
-		public void SetBackground(SolidColorBrush _background)
+		public void SetBackground(SolidColorBrush _background, int registers = 0)
 		{
-			if (IsHalfBackground)
+			var left = _background;
+			var right = _background;
+
+			if (registers == 1)
 			{
-				if (string.Equals(Name, "WB"))
+				IsHalfBlock = Visibility.Visible;
+				right = _mainColor;
+			}
+			else if (registers == 2)
+			{
+				IsHalfBlock = Visibility.Visible;
+				left = _mainColor;
+			}
+			else if (registers == 3)
+			{
+				IsHalfBlock = Visibility.Visible;
+			}
+
+			if (IsHalfBlock == Visibility.Visible)
+			{
+				if ((string.Equals(Name, "WB") || registers == 1 || registers == 3) && registers != 2)
 				{
-					LeftHalfBackground = _background;
+					LeftHalfBackground = left;
 				}
-				else
+
+				if (registers == 3 || registers == 2)
 				{
-					HalfBackground = _background;
+					HalfBackground = right;
 				}
 			}
 			else
@@ -165,7 +178,7 @@ namespace PipelineSimulator
 
 		public void SetDefaultBackground()
 		{
-			if (IsHalfBackground)
+			if (IsHalfBlock == Visibility.Visible)
 			{
 				SetBackground(_halfColor);
 			}

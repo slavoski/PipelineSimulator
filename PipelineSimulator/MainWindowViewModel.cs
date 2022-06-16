@@ -3,6 +3,7 @@ using MvvmHelpers;
 using MvvmHelpers.Commands;
 using ProcessorSimulator;
 using System;
+using System.Linq;
 
 namespace PipelineSimulator.VM
 {
@@ -113,11 +114,25 @@ namespace PipelineSimulator.VM
 
 				case "lw":
 					{
+						newInstruction = new LoadPipelineInstruction()
+						{
+							Command = command,
+							Destination = GetValidRegister(parameters[0]),
+							Source = GetValidLoadRegister(parameters[1]),
+							Instruction = instruction,
+						};
 					}
 					break;
 
 				case "sw":
 					{
+						newInstruction = new StorePipelineInstruction()
+						{
+							Command = command,
+							Destination = GetValidLoadRegister(parameters[1]),
+							Source = GetValidRegister(parameters[0]),
+							Instruction = instruction,
+						};
 					}
 					break;
 
@@ -139,9 +154,34 @@ namespace PipelineSimulator.VM
 			AllPipelines.ClearLists();
 		}
 
-		private string[] GetParameters(string line, int index)
+		private string[] GetParameters(string line, int index) =>
+			line.Substring(index + 1, line.Length - index - 1).Split(new char[] { ' ', ',' }).Where(p => !string.IsNullOrEmpty(p)).ToArray();
+
+		private string GetValidLoadRegister(string inputParameter)
 		{
-			return line.Substring(index + 1, line.Length - index - 1).Split(new char[] { ' ', ',' });
+			string result;
+
+			if (3 <= inputParameter.Length)
+			{
+				var index = inputParameter.IndexOf('$');
+				var reg = inputParameter.Substring(index, 3);
+
+				if (reg != null && !Char.IsDigit(reg[1]) && Char.IsDigit(reg[2]))
+				{
+					result = inputParameter;
+				}
+				else
+				{
+					SnackBoxMessage.Enqueue($"Bad Register: {inputParameter} not recognized");
+					throw new ArgumentException();
+				}
+			}
+			else
+			{
+				SnackBoxMessage.Enqueue($"Bad Register: {inputParameter} not recognized");
+				throw new ArgumentException();
+			}
+			return result;
 		}
 
 		private string GetValidRegister(string inputParameter)

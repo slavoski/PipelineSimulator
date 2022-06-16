@@ -47,35 +47,30 @@ namespace PipelineSimulator
 			for (int i = 0; i < HazardPipeline.PipelineInstructions.Count; ++i)
 			{
 				var currentPipeline = HazardPipeline.PipelineInstructions[i];
-				var color = ColorManager.GetColor();
 
-				var descendant = GetDescendant(i + 1, HazardPipeline);
-				var descendant2 = GetDescendant(i + 2, HazardPipeline);
-				var descendant3 = GetDescendant(i + 3, HazardPipeline);
+				if (currentPipeline.ValueAvailable != PipelineStages.Blank)
+				{
 
-				if (descendant != null && SetHazardColor(currentPipeline, descendant, color))
-				{
-					continue;
-				}
-				if (descendant2 != null && SetHazardColor(currentPipeline, descendant2, color))
-				{
-					continue;
-				}
-				if (descendant3 != null && SetHazardColor(currentPipeline, descendant3, color))
-				{
-					continue;
+					var color = ColorManager.GetColor();
+
+					var descendant = GetDescendant(i + 1, HazardPipeline);
+					var descendant2 = GetDescendant(i + 2, HazardPipeline);
+					var descendant3 = GetDescendant(i + 3, HazardPipeline);
+
+					if (descendant != null && SetHazardColor(currentPipeline, descendant, color))
+					{
+						continue;
+					}
+					if (descendant2 != null && SetHazardColor(currentPipeline, descendant2, color))
+					{
+						continue;
+					}
+					if (descendant3 != null && SetHazardColor(currentPipeline, descendant3, color))
+					{
+						continue;
+					}
 				}
 			}
-
-			//int registers = CheckForDependency(instruction, newInstruction);
-
-			//if (registers != 0)
-			//{
-			//	instruction.SetHazard("Data", PipelineStages.WB, color, 3);
-			//	newInstruction.SetHazard("Data", PipelineStages.ID, color, registers);
-
-			//	break;
-			//}
 		}
 
 		internal void AddColors()
@@ -83,6 +78,9 @@ namespace PipelineSimulator
 			for (int i = 0; i < ForwardingPipeline.PipelineInstructions.Count; ++i)
 			{
 				var currentPipeline = ForwardingPipeline.PipelineInstructions[i];
+				if (currentPipeline.ForwardingValueAvailable == PipelineStages.Blank || currentPipeline.ForwardingValueAvailable == PipelineStages.Bubble)
+					continue;
+
 				var color = ColorManager.GetColor();
 
 				for (int j = 1; j < 4; j++)
@@ -175,24 +173,25 @@ namespace PipelineSimulator
 
 		private int CheckForDependency(IPipelineInstruction origPipeline, IPipelineInstruction newPipeline)
 		{
+
 			var reg = 0;
-
-			if (origPipeline.Destination == newPipeline.Source)
+			if ( !(origPipeline.InstructionBlocks.First(p => p.Stage == PipelineStages.WB).Index < newPipeline.InstructionBlocks.First(p => p.Stage == newPipeline.ForwardingValueNeeded).Index))
 			{
-				reg = 1;
-			}
+			
+				if (origPipeline.Destination == newPipeline.Source)
+				{
+					reg = 1;
+				}
 
-			if (origPipeline.Destination == newPipeline.Source2)
-			{
-				reg += 2;
+				if (origPipeline.Destination == newPipeline.Source2)
+				{
+					reg += 2;
+				}
 			}
 
 			return reg;
 		}
-
-		private bool CheckForSameRegister(IPipelineInstruction pipelineInstruction, IPipelineInstruction newInstruction) =>
-			string.Equals(pipelineInstruction.Destination, newInstruction.Source)
-			|| (string.Equals(pipelineInstruction.Destination, newInstruction.Source2));
+			
 
 		private void CheckForStructuralHazard(IPipelineInstruction newInstruction, bool isHazard, bool isForwarding = false)
 		{

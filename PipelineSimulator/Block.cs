@@ -165,7 +165,7 @@ namespace PipelineSimulator
 					LeftHalfBackground = left;
 				}
 
-				if (registers == 3 || registers == 2)
+				if (string.Equals(Name, "ID") || registers == 3 || registers == 2)
 				{
 					HalfBackground = right;
 				}

@@ -1,5 +1,4 @@
-﻿using MvvmHelpers;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using static PipelineSimulator.Constants;
 
 namespace PipelineSimulator
@@ -40,27 +39,9 @@ namespace PipelineSimulator
 			for (int i = 0; i < 4; ++i)
 			{
 				blockList.Add(new Block("", -1) { Stage = PipelineStages.Bubble });
-				blockList.Add(new Block(PipelineStages.Bubble.ToString(), -1) {Stage = PipelineStages.Bubble });
+				blockList.Add(new Block(PipelineStages.Bubble.ToString(), -1) { Stage = PipelineStages.Bubble });
 			}
 			return blockList;
-		}
-
-		private void SetupDefaultBackground(ObservableRangeCollection<Block> _collection)
-		{
-			foreach (var instruction in _collection)
-			{
-				instruction.SetDefaultBackground();
-			}
-		}
-
-		private void SetupForwarding()
-		{
-			SetupDefaultBackground(InstructionBlocks);
-		}
-
-		private void SetupReorderedForwarding()
-		{
-			SetupDefaultBackground(InstructionBlocks);
 		}
 
 		private void SetupStall()

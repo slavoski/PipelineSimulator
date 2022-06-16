@@ -2,16 +2,16 @@
 
 namespace PipelineSimulator
 {
-	public class ArithmeticPipelineInstruction : PipelineInstruction
+	public class LoadPipelineInstruction : PipelineInstruction
 	{
 		#region constructor / destructor
 
-		public ArithmeticPipelineInstruction()
+		public LoadPipelineInstruction()
 		{
 			ValueAvailable = PipelineStages.WB;
 			ValueNeeded = PipelineStages.ID;
-			ForwardingValueAvailable = PipelineStages.EX_Finished;
-			ForwardingValueNeeded = PipelineStages.EX;
+			ForwardingValueAvailable = PipelineStages.DMEM_Finished;
+			ForwardingValueNeeded = PipelineStages.DMEM;
 		}
 
 		#endregion constructor / destructor
@@ -20,7 +20,7 @@ namespace PipelineSimulator
 
 		public override IPipelineInstruction Copy()
 		{
-			return new ArithmeticPipelineInstruction()
+			return new LoadPipelineInstruction()
 			{
 				Command = this.Command,
 				Destination = this.Destination,

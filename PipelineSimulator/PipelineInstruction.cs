@@ -108,14 +108,9 @@ namespace PipelineSimulator
 
 		#region methods
 
-		//public virtual bool CheckForDataHazard(IPipelineInstruction pipelineInstruction, bool isForwarding, ref int rowIndex)
-		//{
-		//	return false;
-		//}
-
 		public virtual bool CheckForDataHazard(IPipelineInstruction pipelineInstruction, bool isForwarding, ref int rowIndex)
 		{
-			if (pipelineInstruction.ValueAvailable != PipelineStages.Blank && (string.Equals(pipelineInstruction.Destination, Source) || string.Equals(pipelineInstruction.Destination, Source2)))
+			if (pipelineInstruction.ValueAvailable != PipelineStages.Blank && (string.Equals(pipelineInstruction.Destination, Source) || string.Equals(pipelineInstruction.Destination, Source2) || (string.Equals(pipelineInstruction.Destination, Destination) && this is StorePipelineInstruction)))
 			{
 				var instructionValueAvailable = pipelineInstruction.GetValueAvailableBlock(isForwarding);
 				var valueNeededBlock = GetValueNeededBlock(isForwarding);

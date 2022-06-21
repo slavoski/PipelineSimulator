@@ -8,7 +8,7 @@ namespace PipelineSimulator
 
 		public StorePipelineInstruction()
 		{
-			ValueAvailable = PipelineStages.Blank;
+			ValueAvailable = PipelineStages.WB;
 			ValueNeeded = PipelineStages.ID;
 			ForwardingValueAvailable = PipelineStages.Blank;
 			ForwardingValueNeeded = PipelineStages.DMEM;
